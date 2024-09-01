@@ -1,0 +1,19 @@
+{
+  "name": "ivcs",
+  "version": "1.0.0",
+  "description": "image version control system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vatsal-afk/FileSync.git"
+  },
+  "author": "vatsal-afk",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vatsal-afk/FileSync/issues"
+  },
+  "homepage": "https://github.com/vatsal-afk/FileSync#readme"
+}
