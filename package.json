@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/vatsal-afk/FileSync/issues"
   },
-  "homepage": "https://github.com/vatsal-afk/FileSync#readme"
+  "homepage": "https://github.com/vatsal-afk/FileSync#readme",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  }
 }
