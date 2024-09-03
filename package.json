@@ -17,7 +17,10 @@
   },
   "homepage": "https://github.com/vatsal-afk/FileSync#readme",
   "dependencies": {
+    "crypto": "^1.0.1",
     "fs": "^0.0.1-security",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "sharp": "^0.33.5",
+    "zlib": "^1.0.5"
   }
 }
