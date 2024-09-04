@@ -30,7 +30,39 @@ function init() {
     console.log('Initialized empty pixitory at', pixPath);
 }
 
+init();
+
+function computeHash(filename) {
+    const fileBuffer = fs.readFileSync(filename);
+    return crypto.createHash('sha1').update(fileBuffer).digest('hex');
+}
+
+function stage(filename) {
+    const pixPath=process.cwd()+'/.pix';
+    const indexPath = path.join(pixPath, 'index.json');
+    if (!fs.existsSync(pixPath)) {
+        fs.mkdirSync(pixPath);
+        console.log("Initialized empty .pix repository")
+    }
+    let index = {};
+    if (fs.existsSync(indexPath)) {
+        index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    } else {
+        index = { files: {} };
+    }
+    const fileHash = computeHash(filename);
+    const timestamp = new Date().toISOString();
+    index.files[filename] = {
+        path: path.join(filename),
+        status: 'staged',
+        hash: fileHash,
+        timestamp: timestamp
+    };
+    fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
+}
+
 function add(filename) {
+    stage(filename);
     const srcDir = `./${filename}`;
     const destDir = path.join("./.pix/objects", path.basename(filename));
     function errorHandler(err) {
@@ -43,6 +75,8 @@ function add(filename) {
     processMetadata(filename);
     fs.copyFile(srcDir, destDir, fs.constants.COPYFILE_EXCL, errorHandler);
 }
+
+add();
 
 function processMetadata(filename) {
     sharp(filename)
@@ -70,15 +104,18 @@ function processMetadata(filename) {
     });
 }
 
-init();
-add("sample.jpg");
-
-function commit() {
+function commit(message) {
+    const commitID = crypto.createHash('sha1').update(message).digest('hex');
+    console.log(commitID);
 
 }
+
+commit();
 
 function branch() {
 
 }
+
+branch();
 
 //export {init, add, branch, commit}
