@@ -5,6 +5,7 @@ const zlib = require('zlib');
 const sharp = require('sharp');
 
 function init() {
+    const default_branch="main";
     if (fs.existsSync('.pix')) {
         console.log('pixitory already initialized!');
         return;
@@ -12,7 +13,7 @@ function init() {
     fs.mkdirSync('.pix');
     const pixPath=process.cwd()+'/.pix';
     const structure = [
-        { dir: '', files: [{ name: 'HEAD', content: 'ref: refs/heads/main\n' }] },
+        { dir: '', files: [{ name: 'HEAD', content: `ref: refs/heads/${default_branch}\n` }] },
         { dir: 'branches', files: [] },
         { dir: 'objects', files: [] },
         { dir: 'refs/heads', files: [] },
@@ -29,8 +30,6 @@ function init() {
     fs.writeFileSync(path.join(pixPath, 'index'), '');
     console.log('Initialized empty pixitory at', pixPath);
 }
-
-init();
 
 function computeHash(filename) {
     const fileBuffer = fs.readFileSync(filename);
@@ -53,7 +52,7 @@ function stage(filename) {
     const fileHash = computeHash(filename);
     const timestamp = new Date().toISOString();
     index.files[filename] = {
-        path: path.join(filename),
+        path: path.resolve(filename),
         status: 'staged',
         hash: fileHash,
         timestamp: timestamp
@@ -63,20 +62,7 @@ function stage(filename) {
 
 function add(filename) {
     stage(filename);
-    const srcDir = `./${filename}`;
-    const destDir = path.join("./.pix/objects", path.basename(filename));
-    function errorHandler(err) {
-        if (err) {
-            console.log('Error moving file!', err);
-        } else {
-            console.log(`${filename} successfully added to .pix/objects/`);
-        }
-    }
-    processMetadata(filename);
-    fs.copyFile(srcDir, destDir, fs.constants.COPYFILE_EXCL, errorHandler);
 }
-
-add();
 
 function processMetadata(filename) {
     sharp(filename)
@@ -105,17 +91,43 @@ function processMetadata(filename) {
 }
 
 function commit(message) {
-    const commitID = crypto.createHash('sha1').update(message).digest('hex');
-    console.log(commitID);
-
+    const srcDir = `./${filename}`;
+    const destDir = path.join("./.pix/objects", path.basename(filename));
+    function errorHandler(err) {
+        if (err) {
+            console.log('Error moving file!', err);
+        } else {
+            console.log(`${filename} successfully added to .pix/objects/`);
+        }
+    }
+    processMetadata(filename);
+    fs.copyFile(srcDir, destDir, fs.constants.COPYFILE_EXCL, errorHandler);
+    const pixPath = process.cwd() + '/.pix';
+    const indexPath = path.join(pixPath, 'index.json');
+    fs.writeFileSync(indexPath, JSON.stringify({ files: {} }, null, 2), 'utf8');
+    console.log('index.json cleared after commit.');
+    console.log('commit message : '+message);
 }
 
-commit();
-
-function branch() {
-
+function branch(branch) {
+    const headPath = path.join('.pix', 'HEAD');
+    const currentBranch = fs.readFileSync(headPath, 'utf8').trim();
+    const currentBranchPath = path.join('.pix', 'refs', 'heads', currentBranch);
+    const commitHash = fs.readFileSync(currentBranchPath, 'utf8').trim();
+    const newBranchPath = path.join('.pix', 'refs', 'heads', branch);
+    fs.writeFileSync(newBranchPath, commitHash);
+    console.log(`Branch '${branch}' created from '${currentBranch}' at commit ${commitHash}`);
 }
 
-branch();
+function checkout(branch) {
+    const branchPath = path.join('.pix', 'refs', 'heads', branch);
+    if (!fs.existsSync(branchPath)) {
+        console.log(`Branch '${branch}' does not exist.`);
+        return;
+    }
+    const headPath = path.join('.pix', 'HEAD');
+    fs.writeFileSync(headPath, branch);
+    console.log(`Switched to branch '${branch}'`);
+}
 
-//export {init, add, branch, commit}
+module.exports = { init, add, commit, branch, checkout };
