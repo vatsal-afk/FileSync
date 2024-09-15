@@ -158,4 +158,8 @@ function checkout(branch) {
     console.log(`Switched to branch '${branch}'`);
 }
 
-module.exports = { init, add, commit, branch, checkout };
+function retrieve(hash) {
+
+}
+
+module.exports = { init, add, commit, branch, checkout, retrieve };
