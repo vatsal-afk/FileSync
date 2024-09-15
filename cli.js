@@ -1,27 +1,26 @@
+const { execSync } = require('child_process');
 const { init, add, commit, branch, checkout } = require('./pix');
 
-const args = process.argv.slice(2);
-const command = args[0];
-const filename = args[1];
-const message = args[2];
-const branchName = args[3];
+// Get command and arguments
+const [,, command, ...args] = process.argv;
 
 switch (command) {
     case 'init':
         init();
         break;
     case 'add':
-        if (filename) add(filename);
+        add(args[0]);
         break;
     case 'commit':
-        if (message) commit(message);
+        commit(args.join(' '));
         break;
     case 'branch':
-        if (branchName) branch(branchName);
+        branch(args[0]);
         break;
     case 'checkout':
-        if (branchName) checkout(branchName);
+        checkout(args[0]);
         break;
     default:
-        console.log('Unknown command. Use init, add, commit, branch, or checkout :)');
+        console.log('Usage: node cli.js {init|add|commit|branch|checkout} [arguments]');
+        process.exit(1);
 }

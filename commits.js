@@ -40,8 +40,9 @@ class CommitHistory {
 
 // Example usage
 const history = new CommitHistory();
-history.addCommit("Initial commit");
-history.addCommit("Added README");
-history.addCommit("Implemented feature X");
+// history.addCommit("Initial commit");
+// history.addCommit("Added README");
+// history.addCommit("Implemented feature X");
 
-history.printHistory();
+// history.printHistory();
+module.exports = {history};

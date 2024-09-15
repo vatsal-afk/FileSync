@@ -3,6 +3,7 @@ const path=require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
 const sharp = require('sharp');
+const {history} = require('./commits.js');
 
 function init() {
     const default_branch="main";
@@ -91,22 +92,49 @@ function processMetadata(filename) {
 }
 
 function commit(message) {
-    const srcDir = `./${filename}`;
-    const destDir = path.join("./.pix/objects", path.basename(filename));
-    function errorHandler(err) {
-        if (err) {
-            console.log('Error moving file!', err);
-        } else {
-            console.log(`${filename} successfully added to .pix/objects/`);
-        }
-    }
-    processMetadata(filename);
-    fs.copyFile(srcDir, destDir, fs.constants.COPYFILE_EXCL, errorHandler);
-    const pixPath = process.cwd() + '/.pix';
+    const pixPath = path.join(process.cwd(), '.pix');
     const indexPath = path.join(pixPath, 'index.json');
+
+    if (!fs.existsSync(indexPath)) {
+        console.log('No files staged for commit.');
+        return;
+    }
+
+    // Read the index.json file
+    let index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    const files = index.files;
+
+    if (Object.keys(files).length === 0) {
+        console.log('No files staged for commit.');
+        return;
+    }
+
+    // Create the objects directory if it does not exist
+    const objectsDir = path.join(pixPath, 'objects');
+    if (!fs.existsSync(objectsDir)) {
+        fs.mkdirSync(objectsDir, { recursive: true });
+    }
+
+    // Process each staged file
+    for (const [filename, fileData] of Object.entries(files)) {
+        const srcDir = fileData.path;
+        const destDir = path.join(objectsDir, path.basename(filename));
+
+        // Copy file to .pix/objects
+        fs.copyFileSync(srcDir, destDir);
+        console.log(`${filename} successfully added to .pix/objects/`);
+
+        // Process metadata
+        processMetadata(srcDir);
+    }
+
+    // Clear the index.json file
     fs.writeFileSync(indexPath, JSON.stringify({ files: {} }, null, 2), 'utf8');
     console.log('index.json cleared after commit.');
-    console.log('commit message : '+message);
+
+    // Add a commit to history
+    history.addCommit(message);
+    history.printHistory();
 }
 
 function branch(branch) {
